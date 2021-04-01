@@ -1,16 +1,10 @@
 # Burger Builder - React App 
 
-### `npm install`
+Burger Builder React App to build burgers, add ingredients and then order it 
 
-Clone this repository
+Deployed on Firebase
 
-Type "npm intall" to install all dependencies from package.json
-
-### `npm start`
-Type "npm start" to run this project on local server
-
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
-
+Link : https://burger-builder-react-deb46.web.app/
 
 Screenshots of Burger-Builder
 
