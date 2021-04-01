@@ -9,7 +9,8 @@ class Modal extends Component{
 
     // this will prevent the Order Summary to re-render when not required
     shouldComponentUpdate (nextProps, nextState){
-        return nextProps.show !== this.props.show;
+        return nextProps.show !== this.props.show || nextProps.children !== this.props.children;
+        // changes in show or orderSummary
     }
 
     render(){

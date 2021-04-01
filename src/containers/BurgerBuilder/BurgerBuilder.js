@@ -4,7 +4,9 @@ import Burger from '../../components/Burger/Burger';
 import BuildControls from '../../components/Burger/BuildControls/BuildControls';
 import Modal from './../../components/UI/Modal/Modal';
 import OrderSummary from './../../components/Burger/OrderSummary/OrderSummary';
-
+import axios from './../../axios-orders';
+import Spinner from './../../components/UI/Spinner/Spinner';
+ 
 const INGREDIENT_PRICES = {
     salad: 0.5,
     cheese: 0.4,
@@ -14,15 +16,20 @@ const INGREDIENT_PRICES = {
 
 class BurgerBuilder extends Component{
     state = {
-        ingredients : {
-            salad : 0,
-            bacon : 0,
-            cheese : 0,
-            meat : 0
-        },
-        totalPrice : 4,
+        ingredients : null,
+        totalPrice : 0,
         purschasable: false,
-        purschasing : false
+        purschasing : false,
+        loading : false
+    }
+
+    componentDidMount () {
+        console.log(this.props)
+        axios.get('https://burger-builder-react-deb46-default-rtdb.firebaseio.com/ingredients.json')
+        .then(promise => {
+            this.setState({ ingredients : promise.data });
+            // console.log(promise.data);
+        });
     }
 
     updatePurchaseState (ingredients) {
@@ -89,7 +96,19 @@ class BurgerBuilder extends Component{
     }
 
     purchaseContinueHandler = () => {
-        alert('You can continue!!');
+        const queryParams = [];
+        for (let i in this.state.ingredients){
+            // it can encodes elements in such a way that it can be used in URL
+            queryParams.push(encodeURIComponent(i) + '=' + encodeURIComponent(this.state.ingredients[i]));
+        }
+
+        queryParams.push('price=' + this.state.totalPrice);
+        const queryString = queryParams.join('&');
+
+        this.props.history.push({
+            pathname : '/checkout/',
+            search : '?' + queryString
+        });
     }
 
     render(){
@@ -101,25 +120,42 @@ class BurgerBuilder extends Component{
         // in disabledInfo -> {salad : true, cheese : false,...} , if true then must be disabled
         }
 
+        let orderSummary = null;
+        let burger = <Spinner />
+
+        if(this.state.ingredients){
+            burger = (    
+            <Auxiliary>
+                <Burger ingredients = {this.state.ingredients} />
+                    <BuildControls 
+                    ingredientAdded = {this.addIngredientHandler}
+                    ingredientSubtracted = {this.removeIngredientHandler} 
+                    disabled = {disabledInfo}
+                    purschasabled = {this.state.purschasable}
+                    price = {this.state.totalPrice} 
+                    ordered = {this.purschaseHandler}/>
+            </Auxiliary> 
+            ) 
+
+            orderSummary = <OrderSummary
+            orderSummary = {this.state.totalPrice.toFixed(2)}
+            purchaseCanceled = {this.purchaseCancelHandler}
+            purchaseContinued = {this.purchaseContinueHandler} 
+            ingredients = {this.state.ingredients} />
+        }
+                  
+        if(this.state.loading){
+            orderSummary = <Spinner />
+        }
+
         return(
             <Auxiliary>
                 <Modal 
                     modalClosed = {this.purchaseCancelHandler}
-                    show = {this.state.purschasing}>
-                    <OrderSummary
-                        orderSummary = {this.state.totalPrice.toFixed(2)}
-                        purchaseCanceled = {this.purchaseCancelHandler}
-                        purchaseContinued = {this.purchaseContinueHandler} 
-                        ingredients = {this.state.ingredients} />
+                    show = {this.state.purschasing}>    
+                    {orderSummary}
                 </Modal>
-                <Burger ingredients = {this.state.ingredients} />
-                <BuildControls 
-                   ingredientAdded = {this.addIngredientHandler}
-                   ingredientSubtracted = {this.removeIngredientHandler} 
-                   disabled = {disabledInfo}
-                   purschasabled = {this.state.purschasable}
-                   price = {this.state.totalPrice} 
-                   ordered = {this.purschaseHandler}/>
+                    {burger}
             </Auxiliary>
         );
     }
